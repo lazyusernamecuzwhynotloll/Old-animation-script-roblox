@@ -1,0 +1,240 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+
+local function applyCustomizations(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    local hrp = char:WaitForChild("HumanoidRootPart")
+
+    for _, s in pairs(hrp:GetChildren()) do
+        if s:IsA("Sound") then
+            s:Destroy()
+        end
+    end
+
+    local animateScript = char:FindFirstChild("Animate")
+    if animateScript then
+        animateScript.Disabled = true
+    end
+
+    local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+    for _, tr in pairs(animator:GetPlayingAnimationTracks()) do
+        tr:Stop()
+    end
+
+    local anims = {
+        idle = "rbxassetid://161100084",
+        walk = "rbxassetid://28440069",
+        run  = "rbxassetid://130591500",
+        jump = "rbxassetid://165928638",
+        fall = "rbxassetid://165928826",
+        climb = "rbxassetid://165928638",
+        sit = "rbxassetid://179224234"
+    }
+
+    local tracks = {}
+    for name, id in pairs(anims) do
+        local a = Instance.new("Animation")
+        a.AnimationId = id
+        local t = animator:LoadAnimation(a)
+        t.Looped = (name ~= "jump" and name ~= "fall")
+        tracks[name] = t
+    end
+
+    local walkSound = Instance.new("Sound", hrp)
+    walkSound.SoundId = "rbxassetid://174960816"
+    walkSound.Volume = 0.8
+    walkSound.Looped = true
+
+    local runSound = Instance.new("Sound", hrp)
+    runSound.SoundId = "rbxassetid://79253237424125"
+    runSound.Volume = 0.9
+    runSound.Looped = true
+
+    local jumpSound = Instance.new("Sound", hrp)
+    jumpSound.SoundId = "rbxassetid://2428506580"
+    jumpSound.Volume = 1
+
+    local climbSound = Instance.new("Sound", hrp)
+    climbSound.SoundId = "rbxassetid://7593297942"
+    climbSound.Volume = 0.8
+    climbSound.Looped = true
+
+    local deathSound = Instance.new("Sound", hrp)
+    deathSound.SoundId = "rbxassetid://169310273"
+    deathSound.Volume = 1
+
+    local damageSound = Instance.new("Sound", hrp)
+    damageSound.SoundId = "rbxassetid://137171473068941"
+    damageSound.Volume = 1
+
+    local chatSound = Instance.new("Sound")
+    chatSound.Name = "ChatSound"
+    chatSound.SoundId = "rbxassetid://8284575295"
+    chatSound.Volume = 5
+    chatSound.Parent = hrp
+
+    humanoid.StateChanged:Connect(function(_, new)
+        if new == Enum.HumanoidStateType.Jumping then
+            jumpSound:Play()
+        end
+    end)
+
+    humanoid.Died:Connect(function()
+        deathSound:Play()
+    end)
+
+local lastHealth = humanoid.Health
+    local lastDamageTime = 0
+    local firstDamage = true
+
+    humanoid.HealthChanged:Connect(function(health)
+        if health < lastHealth and health > 0 then
+            local currentTime = tick()
+            if firstDamage or (currentTime - lastDamageTime >= 0.5) then
+                damageSound:Play()
+                lastDamageTime = currentTime
+                firstDamage = false
+            end
+        end
+        lastHealth = health
+    end)
+
+    player.Chatted:Connect(function()
+        local char = player.Character
+        if char then
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local chatSound = hrp:FindFirstChild("ChatSound")
+                if chatSound then
+                    chatSound:Play()
+                end
+            end
+        end
+    end)
+
+    local current = ""
+    RunService.RenderStepped:Connect(function()
+        if not humanoid or humanoid.Health <= 0 then return end
+        local speed = hrp.Velocity.Magnitude
+        local state = humanoid:GetState()
+
+        if state == Enum.HumanoidStateType.Freefall then
+            if current ~= "fall" then
+                current = "fall"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["fall"]:Play()
+                walkSound:Stop()
+                runSound:Stop()
+                climbSound:Stop()
+            end
+        elseif state == Enum.HumanoidStateType.Jumping then
+            if current ~= "jump" then
+                current = "jump"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["jump"]:Play()
+                walkSound:Stop()
+                runSound:Stop()
+                climbSound:Stop()
+            end
+        elseif state == Enum.HumanoidStateType.Climbing then
+            if current ~= "climb" then
+                current = "climb"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["climb"]:Play()
+                climbSound:Play()
+                walkSound:Stop()
+                runSound:Stop()
+            end
+        elseif state == Enum.HumanoidStateType.Seated then
+            if current ~= "sit" then
+                current = "sit"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["sit"]:Play()
+                walkSound:Stop()
+                runSound:Stop()
+                climbSound:Stop()
+            end
+        elseif speed < 1 then
+            if current ~= "idle" then
+                current = "idle"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["idle"]:Play()
+                walkSound:Stop()
+                runSound:Stop()
+                climbSound:Stop()
+            end
+        elseif speed < 13 then
+            if current ~= "walk" then
+                current = "walk"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["walk"]:Play()
+                walkSound:Play()
+                runSound:Stop()
+                climbSound:Stop()
+            end
+        else
+            if current ~= "run" then
+                current = "run"
+                for _, t in pairs(tracks) do t:Stop() end
+                tracks["run"]:Play()
+                runSound:Play()
+                walkSound:Stop()
+                climbSound:Stop()
+            end
+        end
+    end)
+
+
+
+    for name, id in pairs(dances) do
+        if not player.Backpack:FindFirstChild(name) then
+            local tool = Instance.new("Tool")
+            tool.Name = name
+            tool.RequiresHandle = false
+            tool.CanBeDropped = false
+
+            local anim = Instance.new("Animation")
+            anim.AnimationId = id
+
+            local danceTrack = nil
+
+            tool.Equipped:Connect(function()
+                humanoid.WalkSpeed = 0
+                humanoid.JumpPower = 0
+                for _, t in pairs(animator:GetPlayingAnimationTracks()) do t:Stop() end
+                walkSound:Stop()
+                runSound:Stop()
+                climbSound:Stop()
+                danceTrack = animator:LoadAnimation(anim)
+                danceTrack.Looped = true
+                danceTrack.Priority = Enum.AnimationPriority.Action
+                danceTrack:Play()
+            end)
+
+            tool.Unequipped:Connect(function()
+                if danceTrack then
+                    danceTrack:Stop()
+                    danceTrack:Destroy()
+                    danceTrack = nil
+                end
+                humanoid.WalkSpeed = 16
+                humanoid.JumpPower = 50
+            end)
+
+            tool.Parent = player.Backpack
+        end
+    end
+end
+
+local function waitForCharacter()
+    if player.Character then
+        applyCustomizations(player.Character)
+    end
+    player.CharacterAdded:Connect(function(char)
+        repeat wait() until char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid")
+        applyCustomizations(char)
+    end)
+end
+
+waitForCharacter()
