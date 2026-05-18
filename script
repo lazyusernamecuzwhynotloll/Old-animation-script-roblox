@@ -11,7 +11,6 @@ local settings = {
 
 	AutoPlay = false,
 	PerfectSick = 0, -- 0 to 1, 0 = off, values above 1 can cause issues
-	CopyEnemyNotes = false, -- I find this stupid
 
 	Performance = 0, -- 0 - 5. More value = less lags
 
@@ -1158,9 +1157,9 @@ local function onWindow(window, dontStartAutoplay)
 		mySide.Visible = value <= 5
 		enemySide.Visible = value <= 5
 		accuracy.Visible = value <= t
-		black.BackgroundTransparency = value >= 3 and 0 or 1
+		black.BackgroundTransparency = value >= 10 and 0 or 1
 
-		pcall(set3d, value <= 3)
+		pcall(set3d, value <= 6)
 	end
 
 	cons[#cons + 1] = settingChanged:Connect(perfc)
