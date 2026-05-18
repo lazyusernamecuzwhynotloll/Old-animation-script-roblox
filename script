@@ -1154,12 +1154,12 @@ local function onWindow(window, dontStartAutoplay)
 	local function perfc(setting, value)
 		if setting ~= "Performance" then return end
 
-		mySide.Visible = value <= 5
-		enemySide.Visible = value <= 5
-		accuracy.Visible = value <= t
-		black.BackgroundTransparency = value >= 10 and 0 or 1
+		mySide.Visible = true
+		enemySide.Visible = true
+		accuracy.Visible = true
+		black.BackgroundTransparency = 1
 
-		pcall(set3d, value <= 6)
+		pcall(set3d, true)
 	end
 
 	cons[#cons + 1] = settingChanged:Connect(perfc)
