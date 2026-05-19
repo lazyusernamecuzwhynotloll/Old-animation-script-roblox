@@ -493,7 +493,7 @@ local function noteAdded(v, notest, mine, lane)
 	insert(toInsert, v)
 
 	renderedOnLanes[lane] = renderedOnLanes[lane] or 0
-	local visible = true
+	local visible = mine or cn  -- CHANGED: Only visible if it's YOUR note OR CopyEnemyNotes is enabled
 	local val = visible and 1 or 0
 
 	renderedOnLanes[lane] += val
@@ -509,7 +509,6 @@ local function noteAdded(v, notest, mine, lane)
 	gpcs(v, "Parent"):Wait()
 
 	noteRemoved:Fire(v, mine, lane, isGood)
-
 	renderedOnLanes[lane] -= val
 	settings.NotesRendered -= 1
 	rendered -= 1	
